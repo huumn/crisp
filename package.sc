@@ -9,5 +9,6 @@
     ("repl" . "scheme")
     ("run" . "scheme --script"))
 ("dependencies" 
-    ("csha256" . "0.1.0"))
+    ("csha256" . "0.1.0")
+    ("igropyr" . "0.2.13"))
 ("devDependencies"))
