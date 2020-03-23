@@ -2,6 +2,7 @@
   (export blockchain-last-block
 	  blockchain-add-block!
 	  blockchain-replace!
+	  get-blockchain
 	  block->hash)
   (import (chezscheme)
 	  (csha256 csha256))
@@ -32,10 +33,13 @@
 
   (define blockchain (list blockchain-genisis-block))
 
-  (define blockchain-last-block (car (reverse blockchain)))
+  (define (get-blockchain)
+    blockchain)
+
+  (define (blockchain-last-block) (car (reverse blockchain)))
 
   (define (blockchain-next-block data)
-    (let ((b blockchain-last-block))
+    (let ((b (blockchain-last-block)))
 	 (make-block (+ (block-index b) 1)
 		     (block->hash b)
 		     (time-second (current-time))

@@ -1,12 +1,24 @@
 (import (igropyr http)
+	(json json)
 	(blockchain))
 
-(printf "control server starting on port 8080")
+(display "control server starting on port 8080")
+
+(define (json-response resp)
+  (response 200
+	    "application/json"
+	    (json->string resp)))
 
 (define (cb header path query)
-  (response 200
-	    "text/html"
-	    (block->hash blockchain-last-block)))
+  (cond (par "/blocks" path)
+	(json-response (list->vector blockchain))
+	(par "/peers" path)
+	(json-response '#())
+	(par "/addPeer" path)
+	(json-response '#())
+	(else (response 404
+			"text/html"
+			"not found"))))
 
 (server (request cb)
 	(request cb)
