@@ -2,16 +2,20 @@
   (export blockchain-last-block
 	  blockchain-add-block!
 	  blockchain-replace!
-	  get-blockchain
-	  block->hash)
+	  blockchain-vector)
   (import (chezscheme)
 	  (csha256 csha256))
 
-  (define-record-type block
-    (fields index
-	    prev-hash
-	    timestamp
-	    data))
+  (define (make-block index prev-hash timestamp data)
+    (list (cons "index" index)
+	  (cons "prev-hash" prev-hash)
+	  (cons "timestamp" timestamp)
+	  (cons "data" data)))
+
+  (define (block-index b) (cdr (assoc "index" b)))
+  (define (block-prev-hash b) (cdr (assoc "prev-hash" b)))
+  (define (block-timestamp b) (cdr (assoc "timestamp" b)))
+  (define (block-data b) (cdr (assoc "data" b)))
 
   (define (block-valid? new prev)
     (and (= (+ 1
@@ -33,8 +37,7 @@
 
   (define blockchain (list blockchain-genisis-block))
 
-  (define (get-blockchain)
-    blockchain)
+  (define (blockchain-vector) (list->vector blockchain))
 
   (define (blockchain-last-block) (car (reverse blockchain)))
 

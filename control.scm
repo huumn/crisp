@@ -10,15 +10,16 @@
 	    (json->string resp)))
 
 (define (cb header path query)
-  (cond (par "/blocks" path)
-	(json-response (list->vector blockchain))
-	(par "/peers" path)
-	(json-response '#())
-	(par "/addPeer" path)
-	(json-response '#())
-	(else (response 404
-			"text/html"
-			"not found"))))
+  (cond ((par "/blocks" path)
+	 (json-response (blockchain-vector)))
+  	((par "/peers" path)
+	 (json-response '#()))
+  	((par "/addPeer" path)
+	 (json-response '#()))
+  	(else
+	 (response 404
+  		   "text/html"
+  		   "not found"))))
 
 (server (request cb)
 	(request cb)
