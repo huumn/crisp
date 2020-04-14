@@ -71,5 +71,4 @@
 	     (> (length new) (length blockchain)))
 	(begin (set! blockchain new)
 	       ;; TODO (blockchain-broadcast)
-	       )))
-)
+	       ))))

@@ -1,6 +1,7 @@
 (import (chezscheme)
 	(suv suv)
 	(blockchain)
+	(peers)
 	(json json))
 
 (display "control server starting on port 8000")
@@ -59,9 +60,9 @@
 			 (blockchain-add-block! block)
 			 (json->string block))]
 		      [(string-ci=? cmd "PEERS")
-		       "TODO: return peers"]
+		       (json->string (peers-vector))]
 		      [(string-ci=? cmd "PEER-ADD")
-		       "TODO: add peer"]
+		       "TODO"]
 		      [else "ERROR: unknown command"])
 		"\r\n"))))
 
