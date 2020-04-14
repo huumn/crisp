@@ -1,5 +1,7 @@
 (import (chezscheme)
-	(suv suv))
+	(suv suv)
+	(blockchain)
+	(json json))
 
 (display "control server starting on port 8000")
 
@@ -40,16 +42,28 @@
   (let* ([split (string-split req #\space)]
 	 [cmd (car split)]
 	 [args (cdr split)])
-	 (suv-write client
-		    (string-append
-		     (cond [(string-ci=? cmd "ECHO")
-			    (if (> (string-length req) 4)
-				(substring req
-					   5
-					   (string-length req))
-				"")]
-			   [else "ERROR: unknown command"])
-		     "\r\n"))))
+    (suv-write client
+	       (string-append
+		(cond [(string-ci=? cmd "ECHO")
+		       (substring req
+				  (min 5 (string-length req))
+				  (string-length req))]
+		      [(string-ci=? cmd "BLOCKS")
+		       (json->string (blockchain-vector))]
+		      [(string-ci=? cmd "BLOCK-MINE")
+		       (let* ([bdata (substring req
+						(min 11 
+						     (string-length req))
+						(string-length req))]
+			      [block (blockchain-gen-block bdata)])
+			 (blockchain-add-block! block)
+			 (json->string block))]
+		      [(string-ci=? cmd "PEERS")
+		       "TODO: return peers"]
+		      [(string-ci=? cmd "PEER-ADD")
+		       "TODO: add peer"]
+		      [else "ERROR: unknown command"])
+		"\r\n"))))
 
 (define (read-handler client)
   (let ([buf ""])

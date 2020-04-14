@@ -1,5 +1,6 @@
 (library (blockchain)
   (export blockchain-last-block
+	  blockchain-gen-block
 	  blockchain-add-block!
 	  blockchain-replace!
 	  blockchain-vector)
@@ -41,7 +42,7 @@
 
   (define (blockchain-last-block) (car (reverse blockchain)))
 
-  (define (blockchain-next-block data)
+  (define (blockchain-gen-block data)
     (let ((b (blockchain-last-block)))
 	 (make-block (+ (block-index b) 1)
 		     (block->hash b)
@@ -53,6 +54,7 @@
 		      (blockchain-last-block))
 	(set! blockchain
 	      (append blockchain (cons b '())))))
+
 
   (define (blockchain-valid? chain)
     (define (chain-valid? chain)
