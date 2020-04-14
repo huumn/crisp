@@ -53,7 +53,7 @@
     (if (block-valid? b
 		      (blockchain-last-block))
 	(set! blockchain
-	      (append blockchain (cons b '())))))
+	      (append blockchain (list b)))))
 
 
   (define (blockchain-valid? chain)

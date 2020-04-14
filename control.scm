@@ -62,7 +62,11 @@
 		      [(string-ci=? cmd "PEERS")
 		       (json->string (peers-vector))]
 		      [(string-ci=? cmd "PEER-ADD")
-		       "TODO"]
+		       (if (null? args)
+			   "ERROR: must specify peer"
+			   (begin
+			     (peers-add! (car args))
+			     (car args)))]
 		      [else "ERROR: unknown command"])
 		"\r\n"))))
 
