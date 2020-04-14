@@ -10,6 +10,5 @@
     ("run" . "scheme --script"))
 ("dependencies" 
     ("csha256" . "0.1.0")
-    ("igropyr" . "0.2.13")
     ("json" . "1.5.6"))
 ("devDependencies"))
