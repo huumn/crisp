@@ -10,5 +10,6 @@
     ("run" . "scheme --script"))
 ("dependencies" 
     ("csha256" . "0.1.0")
-    ("json" . "1.5.6"))
+    ("json" . "1.5.6")
+    ("srfi" . "1.0.0"))
 ("devDependencies"))

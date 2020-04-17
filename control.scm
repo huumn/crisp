@@ -1,19 +1,14 @@
 (import (chezscheme)
+	(srfi s13 strings)
+	(srfi s1 lists)
+	(json json)
 	(suv suv)
 	(blockchain)
-	(peers)
-	(json json))
+	(peers))
 
 (display "control server starting on port 8000")
 
-;; should probably replace this stuff with
-;; srfis
-(define (string-index str chr)
-  (let ([len (string-length str)])
-    (do ((pos 0 (+ 1 pos)))
-	((or (>= pos len) (char=? chr (string-ref str pos)))
-	 (and (< pos len) pos)))))
-
+;; should probably use string-contains from srfi s13
 (define (string-split str chr)
   (let ([idx (string-index str chr)])
     (if idx
@@ -25,19 +20,6 @@
 	      (string-split (substring str (+ 1 idx) (string-length str))
 			  chr))
 	(list str))))
-
-(define (string-join strs del)
-  (if (null? strs)
-      ""
-      (fold-left (lambda (acc x) (string-append acc del x))
-            (car strs)
-            (cdr strs))))
-
-(define (but-last l)
-  (reverse (cdr (reverse l))))
-
-(define (last l)
-  (car (reverse l)))
 
 (define (run-cmd client req)
   (let* ([split (string-split req #\space)]
@@ -76,7 +58,7 @@
       (let* ([split (string-split (string-append buf
 						 req)
 				  #\newline)]
-	    [reqs (but-last split)])
+	    [reqs (drop-right split 1)])
 	(map (lambda (req)
 	       (run-cmd client req))
 	     reqs)
