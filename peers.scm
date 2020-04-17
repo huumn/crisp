@@ -18,9 +18,11 @@
   	  [buf ""])
       (lambda (req)
 	(if (eq? nexpect -1)
+	    -1
+	    -1
 	    ;; look for first \r\n in buf, store nexpected
 	    ;; else attempt to read in nexpect chars from buf
-	    )
+	    ))))
 
   ;; (suv-listen "127.0.0.1"
   ;; 	      9000

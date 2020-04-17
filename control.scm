@@ -8,21 +8,19 @@
 
 (display "control server starting on port 8000")
 
-;; should probably use string-contains from srfi s13
-(define (string-split str chr)
-  (let ([idx (string-index str chr)])
+(define (string-split str sep)
+  (let ([idx (string-contains str sep)])
     (if idx
-	(cons (substring str 0
-			 (if (and (positive? idx)
-				  (char=? #\return (string-ref str (+ -1 idx))))
-			     (+ -1 idx)
-			     idx))
-	      (string-split (substring str (+ 1 idx) (string-length str))
-			  chr))
+	(cons (substring str 0 idx)
+	      (string-split (substring str
+				       (+ idx
+					  (string-length sep))
+				       (string-length str))
+			    sep))
 	(list str))))
 
 (define (run-cmd client req)
-  (let* ([split (string-split req #\space)]
+  (let* ([split (string-split req " ")]
 	 [cmd (car split)]
 	 [args (cdr split)])
     (suv-write client
@@ -57,7 +55,7 @@
     (lambda (req)
       (let* ([split (string-split (string-append buf
 						 req)
-				  #\newline)]
+				  "\r\n")]
 	    [reqs (drop-right split 1)])
 	(map (lambda (req)
 	       (run-cmd client req))
