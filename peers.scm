@@ -1,6 +1,6 @@
-;; (library (peers)
-;;   (export peers-vector
-;; 	  peers-add!)
+(library (peers)
+  (export peers-vector
+	  peers-add!)
   (import (chezscheme)
 	  (srfi s13 strings)
 	  (srfi s1 lists)
@@ -74,5 +74,4 @@
 				(read-handler client))
 		;; (suv-write client initial-query)
 		))
-(suv-run)
-;)					
+)					
