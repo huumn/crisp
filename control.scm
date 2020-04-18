@@ -19,7 +19,7 @@
 			    sep))
 	(list str))))
 
-(define (run-cmd client req)
+(define (run-cmd! client req)
   (let* ([split (string-split req " ")]
 	 [cmd (car split)]
 	 [args (cdr split)])
@@ -58,7 +58,7 @@
 				  "\r\n")]
 	    [reqs (drop-right split 1)])
 	(map (lambda (req)
-	       (run-cmd client req))
+	       (run-cmd! client req))
 	     reqs)
 	(set! buf (last split))))))
       
