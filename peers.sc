@@ -4,7 +4,9 @@
 	  peers-listen)
   (import (chezscheme)
 	  (only (srfi s13 strings) string-contains)
-	  (only (srfi s1 lists) drop-right last)
+	  (only (srfi s1 lists)
+		drop-right
+		last)
 	  (suv suv)
 	  (json json)
 	  (blockchain))
@@ -18,16 +20,20 @@
 
   (define (peers-add! peer)
     (set! peers
-  	  (append peers (list peer))))
+  	  (append peers (list peer)))
+    (suv-read-start peer
+		    (read-handler peer)
+		    (close-handler peer))
+    (suv-write peer (last-block-msg)))
+
+  (define (peers-remove! peer)
+    (set! peers
+	  (remove peer peers)))
 
   (define (peers-connect-add! ip port)
     (suv-connect ip
   		 port
-  		 (lambda (server)
-  		   (peers-add! server)
-  		   (suv-read-start server
-  				   (read-handler server))
-  		   (suv-write server (last-block-msg)))))
+  		 peers-add!))
 
   (define (make-msg type data)
     (define (frame-msg msg)
@@ -114,14 +120,15 @@
   		(suv-write client
 			   (make-msg "error"
 				     "protocol error"))))))))
+  (define (close-handler client)
+    (lambda (status)
+      (peers-remove! client)
+      (suv-close client)))
 
   (define (peers-listen port)
     (suv-listen "127.0.0.1"
 		port
 		(lambda (client)
 		  (suv-accept client)
-		  (peers-add! client)
-		  (suv-read-start client
-				  (read-handler client))
-		  (suv-write client (last-block-msg)))))
+		  (peers-add! client))))
 )		
