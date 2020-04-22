@@ -1,20 +1,12 @@
-(import (chezscheme)
-	(only (srfi s13 strings) string-contains)
-	(only (srfi s1 lists) drop-right last)
-	(json json)
-	(suv suv)
-	(blockchain)
-	(peers))
-
-(define port 6017)
-(if (> (length (command-line)) 1)
-    (let ([num (string->number (cadr (command-line)))])
-      (if num
-	  (set! port num)
-	  (exit (display "Invalid port\n")))))
-
-(display (format "control server starting on port ~a" port))
-(flush-output-port)
+(library (control)
+  (export control-listen)
+  (import (chezscheme)
+	  (only (srfi s13 strings) string-contains)
+	  (only (srfi s1 lists) drop-right last)
+	  (json json)
+	  (suv suv)
+	  (blockchain)
+	  (peers))
 
 (define (string-split str sep)
   (let ([idx (string-contains str sep)])
@@ -50,10 +42,12 @@
 		      [(string-ci=? cmd "PEERS")
 		       (json->string (peers-vector))]
 		      [(string-ci=? cmd "PEER-ADD")
-		       (if (null? args)
-			   "ERROR: must specify peer"
-			   (peers-connect-add! (car args)
-					       (string->number (cadr args))))]
+		       (if (not (= (length args) 2))
+			   "ERROR: must specify ip and port"
+			   (begin
+			     (peers-connect-add! (car args)
+						 (string->number (cadr args)))
+			     "OK"))]
 		      [else "ERROR: unknown command"])
 		"\r\n"))))
 
@@ -69,11 +63,11 @@
 	     reqs)
 	(set! buf (last split))))))
 
-(suv-listen "127.0.0.1"
-	    port
-	    (lambda (client)
-	      (suv-accept client)
-	      (suv-read-start client
-			      (read-handler client))))
-
-(suv-run)
+(define (control-listen port)
+  (suv-listen "127.0.0.1"
+	      port
+	      (lambda (client)
+		(suv-accept client)
+		(suv-read-start client
+				(read-handler client)))))
+)

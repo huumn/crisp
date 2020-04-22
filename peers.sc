@@ -1,6 +1,7 @@
 (library (peers)
   (export peers-vector
-	  peers-connect-add!)
+	  peers-connect-add!
+	  peers-listen)
   (import (chezscheme)
 	  (only (srfi s13 strings) string-contains)
 	  (only (srfi s1 lists) drop-right last)
@@ -33,20 +34,20 @@
       (format "~d\r\n~a\r\n"
   	      (string-length msg)
   	      msg))
-    (frame-msg (json->string (list  (cons "type" type)
-  				    (cons "data" data)))))
+    (frame-msg (json->string
+		(json-push
+		 (json-push '() "data" data)
+		 "type" type))))
 
   (define (msg-type m) (cdr (assoc "type" m)))
   (define (msg-data m) (cdr (assoc "data" m)))
 
-  (define (last-block-msg) (make-msg "last-block" #f))
+  (define (last-block-msg) (make-msg "last-block" ""))
   (define (last-block-resp-msg)
-    (make-msg "last-block-resp"
-  	      (json->string (blockchain-last-block))))
-  (define (blocks-msg) (make-msg "blocks" #f))
+    (make-msg "last-block-resp" (blockchain-last-block)))
+  (define (blocks-msg) (make-msg "blocks" ""))
   (define (blocks-resp-msg)
-    (make-msg "blocks-resp"
-  	      (json->string (blockchain-vector))))
+    (make-msg "blocks-resp" (blockchain-vector)))
     
   ;; messages are of form <len msg as string>\r\n<message>\r\n
   ;; returns a list of parsed messages, followed by #f if an
@@ -77,25 +78,26 @@
   	  (list msgstr))))
 
   (define (process-msg! client msg)
+    (define (println a)
+      (display a)
+      (display "\n")
+      (flush-output-port))
     (let* ([pmsg (string->json msg)]
   	   [type (msg-type pmsg)])
       (cond [(string=? type "last-block")
   	     (suv-write client
   			(last-block-resp-msg))]
   	    [(string=? type "last-block-resp")
-  	     (display (msg-data pmsg))]
+  	     (println (msg-data pmsg))]
   	    [(string=? type "blocks")
   	     (suv-write client
   			(blocks-resp-msg))]
   	    [(string=? type "blocks-resp")
-  	     (display (msg-data pmsg))]
-  	    [else (make-msg "error" "unknown msg type")])))
-
-    ;; (suv-write client
-    ;; 	       (string-append (or msg
-    ;; 				  "Protocol Error")
-    ;; 			      "\r\n")))
-
+  	     (println (msg-data pmsg))]
+	    [(string=? type "error")
+	     (println (msg-data pmsg))]
+  	    [else
+	     (make-msg "error" "unknown msg type")])))
 
   (define (read-handler client)
     (let ([buf ""])
@@ -109,15 +111,17 @@
   	      (set! buf (last msgs))
   	      (begin
   		(set! buf "")
-  		(process-msg! client
-  			     (last msgs))))))))
+  		(suv-write client
+			   (make-msg "error"
+				     "protocol error"))))))))
 
-  (suv-listen "127.0.0.1"
-  	      9000
-  	      (lambda (client)
-  		(suv-accept client)
-  		(peers-add! client)
-  		(suv-read-start client
-  				(read-handler client))
-  		(suv-write client (last-block-msg))))
+  (define (peers-listen port)
+    (suv-listen "127.0.0.1"
+		port
+		(lambda (client)
+		  (suv-accept client)
+		  (peers-add! client)
+		  (suv-read-start client
+				  (read-handler client))
+		  (suv-write client (last-block-msg)))))
 )		
