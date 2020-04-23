@@ -1,7 +1,8 @@
 (library (peers)
   (export peers-vector
 	  peers-connect-add!
-	  peers-listen)
+	  peers-listen
+	  peers-broadcast-last-block)
   (import (chezscheme)
 	  (only (srfi s13 strings) string-contains)
 	  (only (srfi s1 lists)
@@ -83,27 +84,47 @@
   		(list #f)))
   	  (list msgstr))))
 
+  (define (peers-broadcast msg)
+    (map (lambda (peer)
+	   (suv-write peer msg)) peers))
+
+  (define (peers-broadcast-last-block)
+    (peers-broadcast (last-block-resp-msg)))
+
   (define (process-msg! client msg)
-    (define (println a)
-      (display a)
-      (display "\n")
-      (flush-output-port))
+    (display (format "~a sent ~a\n"
+		     (suv-getpeername client)
+		     msg))
     (let* ([pmsg (string->json msg)]
-  	   [type (msg-type pmsg)])
+  	   [type (msg-type pmsg)]
+	   [data (msg-data pmsg)])
       (cond [(string=? type "last-block")
   	     (suv-write client
   			(last-block-resp-msg))]
   	    [(string=? type "last-block-resp")
-  	     (println (msg-data pmsg))]
+	     (if (block-ahead? data)
+		 (if (block-valid-descendant? data
+					      (blockchain-last-block))
+		     (begin
+		       (blockchain-add-block! data)
+		       (peers-broadcast-last-block))
+		     (peers-broadcast (blocks-msg))))]
   	    [(string=? type "blocks")
   	     (suv-write client
   			(blocks-resp-msg))]
   	    [(string=? type "blocks-resp")
-  	     (println (msg-data pmsg))]
-	    [(string=? type "error")
-	     (println (msg-data pmsg))]
+	     (let* ([blocks (vector->list data)]
+		   [their-latest (last blocks)])
+	       (when (block-ahead? their-latest)
+		   (if (block-valid-descendant? their-latest
+						(blockchain-last-block))
+			 (blockchain-add-block! their-latest)
+			 (blockchain-replace! blocks))
+		   (peers-broadcast-last-block)))]
   	    [else
-	     (make-msg "error" "unknown msg type")])))
+	     (suv-write client
+			(make-msg "error"
+				  "unknown msg type"))])))
 
   (define (read-handler client)
     (let ([buf ""])
@@ -120,6 +141,7 @@
   		(suv-write client
 			   (make-msg "error"
 				     "protocol error"))))))))
+  
   (define (close-handler client)
     (lambda (status)
       (peers-remove! client)

@@ -3,7 +3,9 @@
 	  blockchain-gen-block
 	  blockchain-add-block!
 	  blockchain-replace!
-	  blockchain-vector)
+	  blockchain-vector
+	  block-ahead?
+	  block-valid-descendant?)
   (import (chezscheme)
 	  (csha256 csha256))
 
@@ -18,12 +20,16 @@
   (define (block-timestamp b) (cdr (assoc "timestamp" b)))
   (define (block-data b) (cdr (assoc "data" b)))
 
-  (define (block-valid? new prev)
+  (define (block-valid-descendant? new prev)
     (and (= (+ 1
 	       (block-index prev))
 	    (block-index new))
 	 (equal? (block->hash prev)
 		 (block-prev-hash new))))
+
+  (define (block-ahead? block)
+    (> (block-index block)
+       (block-index (blockchain-last-block))))
 
   (define (block->hash b)
       (sha256 (string-append (number->string (block-index b))
@@ -50,8 +56,8 @@
 		     data)))
 
   (define (blockchain-add-block! b)
-    (if (block-valid? b
-		      (blockchain-last-block))
+    (if (block-valid-descendant? b
+				(blockchain-last-block))
 	(set! blockchain
 	      (append blockchain (list b)))))
 
@@ -59,8 +65,8 @@
   (define (blockchain-valid? chain)
     (define (chain-valid? chain)
       (or (null? (cdr chain))
-	  (and (block-valid? (car chain)
-			     (cadr chain))
+	  (and (block-valid-descendant? (cadr chain)
+					(car chain))
 	       (chain-valid? (cdr chain)))))
     (and (equal? blockchain-genisis-block
 		 (car chain))
@@ -69,6 +75,6 @@
   (define (blockchain-replace! new)
     (if (and (blockchain-valid? new)
 	     (> (length new) (length blockchain)))
-	(begin (set! blockchain new)
-	       ;; TODO (blockchain-broadcast)
-	       ))))
+	(set! blockchain new)))
+
+  )

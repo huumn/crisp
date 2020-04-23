@@ -38,6 +38,7 @@
 						(string-length req))]
 			      [block (blockchain-gen-block bdata)])
 			 (blockchain-add-block! block)
+			 (peers-broadcast-last-block)
 			 (json->string block))]
 		      [(string-ci=? cmd "PEERS")
 		       (json->string (peers-vector))]
