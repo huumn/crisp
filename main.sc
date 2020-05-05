@@ -4,8 +4,8 @@
 	(control)
 	(peers))
 
-(define control-port 6751)
-(define peers-port 9335)
+(define control-port 7777)
+(define peers-port 9999)
 
 (define (parse-flags! args)
   (define (set-flag! flag arg)
