@@ -2,7 +2,7 @@ Crisp is a cryptocurrency written in Lisp. As of this writing, it's a toy blockc
 
 ## Control
 
-Crisp listens on a TCP port for control commands. Commands can be sent pretty naturally with telnet as commands are framed by the delimiter "\r\n":
+Crisp listens on a TCP port for control commands. Commands can be sent pretty naturally with telnet as commands are framed by the delimiter `\r\n`:
 
 ```
 > blocks
@@ -20,15 +20,15 @@ A command name and its arguments are delimited with spaces:
 | command       | returns       |
 | ------------- | ------------- |
 | blocks        | json array of blocks |
-| block-mine <optional msg> | newly mined block as json     |
+| block-mine [msg] | newly mined block as json     |
 | peers | json array of peers as ip:port |
-| peer-add <ip> <port> | OK |
-| echo <msg> | <msg> | 
+| peer-add ip port | OK |
+| echo msg | msg | 
 
 
 ## Peer Gossip
 
-Crisp peers gossip over TCP. Messages are encoded as ascii-length-prefixed JSON, where the message length and the messages themselves are delimited with "\r\n". The JSON messages contain both a "type" and "data" field. When a peer asks another peer for its last block, the message looks like the following:
+Crisp peers gossip over TCP. Messages are encoded as ascii-length-prefixed JSON, where the message length and the messages themselves are delimited with `\r\n`. The JSON messages contain both a `type` and `data` field. When a peer asks another peer for its last block, the message looks like the following:
 
 ```
 "31\r\n{\"type\":\"last-block\",\"data\":\"\"}\r\n"
@@ -48,7 +48,7 @@ The longest valid chain always wins. Because we don't yet have transactions, val
 
 ## Running
 
-For the time being Crisp uses [ravensc.com](http://ravensc.com) for package control and uses [suv](http://github.com/huumn/suv) for io which you'll have to clone and build manually. The full process from scratch (assuming you have Chez Scheme):
+For the time being Crisp uses [ravensc.com](http://ravensc.com) for package control and uses [suv](http://github.com/huumn/suv) for io which you'll have to clone and build manually. The full process from scratch, assuming you already have [chez](https://github.com/cisco/ChezScheme) and aren't on Windows:
 
 ```
 $ curl -L http://ravensc.com/install | scheme
