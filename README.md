@@ -1,4 +1,9 @@
-Crisp is a cryptocurrency written in Lisp. As of this writing, it's a toy blockchain written in Chez Scheme.
+Crisp is a cryptocurrency written in Lisp. As of this writing, it's a toy blockchain written in Chez Scheme. 
+
+## Goals
+
+1. Make Crisp a robust blockchain implementation written in Lisp that also uses Lisp as the transaction language.
+2. Experiment with the transaction language such that it provides features unavailable in existing blockchains
 
 ## Control
 
@@ -21,6 +26,7 @@ A command name and its arguments are delimited with spaces:
 | ------------- | ------------- |
 | blocks        | json array of blocks |
 | block-mine [msg] | newly mined block as json     |
+| block-last | the last block mined |
 | peers | json array of peers as ip:port |
 | peer-add ip port | OK |
 | echo msg | msg | 
@@ -44,7 +50,7 @@ Crisp peers gossip over TCP. Messages are encoded as ascii-length-prefixed JSON,
 
 ## Consensus
 
-The longest valid chain always wins. Because we don't yet have transactions, valid here only means the chain itself is a valid blockchain. That is, the blocks are "linked" with the correct hash "pointers."
+The valid chain with the most cumulative work always wins. Because we don't yet have transactions, valid here only means the chain itself is a valid blockchain. That is, the blocks are "linked" with the correct hash "pointers," and the timestamps between blocks is reasonable.
 
 ## Running
 
