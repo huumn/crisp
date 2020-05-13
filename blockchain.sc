@@ -1,12 +1,15 @@
 (library (blockchain)
   (export blockchain-last-block
-	  blockchain-gen-block
+	  blockchain-mine-block
 	  blockchain-add-block!
 	  blockchain-replace!
 	  blockchain-vector
+	  chain-last-block
 	  block-ahead?
 	  block-valid-descendant?)
   (import (chezscheme)
+	  (only (srfi s13 strings) string-prefix?)
+	  (only (srfi s1 lists) every last alist-delete)
 	  (csha256 csha256))
 
   (define (make-block index prev-hash timestamp data difficulty nonce)
@@ -23,6 +26,10 @@
   (define (block-data b) (cdr (assoc "data" b)))
   (define (block-difficulty b) (cdr (assoc "difficulty" b)))
   (define (block-nonce b) (cdr (assoc "nonce" b)))
+
+  (define (block-with-nonce b nonce)
+    (cons (cons "nonce" nonce)
+	  (alist-delete "nonce" b)))
 
   (define (block-valid-descendant? new prev)
     (and (= (+ 1 (block-index prev))
@@ -43,11 +50,14 @@
 	 (block-valid-timestamp? new prev)))
 
   (define (block-valid-difficulty? block)
+    ;; number->string removes leading zeros and we assume hash is a
+    ;; hex string (4 bits per char)
     (define (difficult-enough? hash difficulty)
-      (string-prefix? (make-string difficulty #\0)
-		      (number->string (string->number hash 16) 2)))
-    (difficult-enough? (block->hash block)
-		       (block-difficulty block)))
+      (<= difficulty
+	  (- (* (string-length hash) 4)
+	     (string-length (number->string (string->number hash 16) 2)))))
+      (difficult-enough? (block->hash block)
+			 (block-difficulty block)))
 
   (define (block-ahead? block last-block)
     (> (block-index block)
@@ -84,10 +94,13 @@
 	     [last-diff (block-difficulty last-adj-block)]
 	     [last-ival-secs (- (block-timestamp last-block)
 				(block-timestamp last-adj-block))])
+	;; is it too easy?
 	(cond [(< last-ival-secs (/ diff-ival-secs 2))
 	       (+ last-diff 1)]
+	      ;; too hard?
 	      [(> last-ival-secs (* diff-ival-secs 2))
 	       (- last-diff 1)]
+	      ;; hard enough
 	      [else last-diff])))
     (let* ([last-block (chain-last-block chain)]
 	   [last-index (block-index last-block)])
@@ -106,7 +119,7 @@
 					       ""
 					       1465154705
 					       "Genisis Block."
-					       0
+					       1
 					       0))
 
   (define blockchain (list blockchain-genisis-block))
@@ -124,19 +137,21 @@
 	   [time (time-second (current-time))]
 	   [difficulty (chain-difficulty blockchain
 					 BLOCK-INTERVAL-SECS
-					 DIFFICULTY-INTERVAL-BLOCKS))])
+					 DIFFICULTY-INTERVAL-BLOCKS)])
       (do ([nonce 0 (+ nonce 1)]
 	   [block (make-block idx
 			      prevhash
 			      time
 			      data
 			      difficulty
-			      nonce)])
-	  ((block-valid-difficulty? block) block)))
+			      0)
+		  (block-with-nonce block
+				    nonce)])
+	  ((block-valid-difficulty? block) block))))
 	      
 
-  (define (blockchain-add-block! b)
-    (if (block-valid-descendant? b
+  (define (blockchain-add-block! block)
+    (if (block-valid-descendant? block
 				(blockchain-last-block))
 	(set! blockchain
 	      (chain-add-block block blockchain))))

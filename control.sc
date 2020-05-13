@@ -40,6 +40,8 @@
 			 (blockchain-add-block! block)
 			 (peers-broadcast-last-block)
 			 (json->string block))]
+		      [(string-ci=? cmd "BLOCK-LAST")
+		       (json->string (blockchain-last-block))]
 		      [(string-ci=? cmd "PEERS")
 		       (json->string (peers-vector))]
 		      [(string-ci=? cmd "PEER-ADD")

@@ -116,7 +116,7 @@
   			(blocks-resp-msg))]
   	    [(string=? type "blocks-resp")
 	     (let* ([chain (vector->list data)]
-		    [their-latest (chain-last-block blocks)])
+		    [their-latest (chain-last-block chain)])
 	       (when (block-ahead? their-latest
 				   last-block)
 		 (if (block-valid-descendant? their-latest
