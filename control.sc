@@ -36,7 +36,7 @@
 						(min 11 
 						     (string-length req))
 						(string-length req))]
-			      [block (blockchain-gen-block bdata)])
+			      [block (blockchain-mine-block bdata)])
 			 (blockchain-add-block! block)
 			 (peers-broadcast-last-block)
 			 (json->string block))]

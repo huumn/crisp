@@ -97,14 +97,16 @@
 		     msg))
     (let* ([pmsg (string->json msg)]
   	   [type (msg-type pmsg)]
-	   [data (msg-data pmsg)])
+	   [data (msg-data pmsg)]
+	   [last-block (blockchain-last-block)])
       (cond [(string=? type "last-block")
   	     (suv-write client
   			(last-block-resp-msg))]
   	    [(string=? type "last-block-resp")
-	     (if (block-ahead? data)
+	     (if (block-ahead? data
+			       last-block)
 		 (if (block-valid-descendant? data
-					      (blockchain-last-block))
+					      last-block)
 		     (begin
 		       (blockchain-add-block! data)
 		       (peers-broadcast-last-block))
@@ -113,14 +115,15 @@
   	     (suv-write client
   			(blocks-resp-msg))]
   	    [(string=? type "blocks-resp")
-	     (let* ([blocks (vector->list data)]
-		   [their-latest (last blocks)])
-	       (when (block-ahead? their-latest)
-		   (if (block-valid-descendant? their-latest
-						(blockchain-last-block))
-			 (blockchain-add-block! their-latest)
-			 (blockchain-replace! blocks))
-		   (peers-broadcast-last-block)))]
+	     (let* ([chain (vector->list data)]
+		    [their-latest (chain-last-block blocks)])
+	       (when (block-ahead? their-latest
+				   last-block)
+		 (if (block-valid-descendant? their-latest
+					      last-block)
+		     (blockchain-add-block! their-latest)
+		     (blockchain-replace! chain))
+		 (peers-broadcast-last-block)))]
   	    [else
 	     (suv-write client
 			(make-msg "error"
